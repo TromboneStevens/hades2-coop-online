@@ -17,6 +17,8 @@ local LootInterface = ModRequire "logic/loot/LootInterface.lua"
 local HeroContext = ModRequire "logic/HeroContext.lua"
 ---@type CoopCamera
 local CoopCamera = ModRequire "logic/CoopCamera.lua"
+---@type CoopModConfig
+local Config = ModRequire "config.lua"
 
 local Gamemode = {}
 
@@ -96,6 +98,29 @@ function Gamemode.RegisterEngineHandlers()
             SetConfigOption { Name = "AllowControlHotSwap", Value = true }
         end
     }
+
+    Gamemode.StartOnlineSession()
+end
+
+---@private
+-- Start the online-coop session layer. Strictly gated on CoopMode == "Online";
+-- the local splitscreen path calls nothing here and is unchanged.
+function Gamemode.StartOnlineSession()
+    if Config.CoopMode ~= "Online" then
+        return
+    end
+
+    ---@type NetSession
+    local NetSession = ModRequire "logic/net/NetSession.lua"
+    ---@type HostSync
+    local HostSync = ModRequire "logic/net/HostSync.lua"
+    ---@type InputSync
+    local InputSync = ModRequire "logic/net/InputSync.lua"
+
+    if NetSession.Start() then
+        HostSync.Init(Events)
+        InputSync.Init()
+    end
 end
 
 return Gamemode

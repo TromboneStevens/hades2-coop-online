@@ -17,6 +17,14 @@ SetTempRuntimeData("Gamemode", nil)
 
 -- Load gamemode hooks
 
+-- Keep the existing local CoopCreatePlayer flow for both Local and Online.
+-- Online note: a Client does not spawn a locally-controlled second hero the same
+-- way the host does. The host owns the authoritative player-2 simulation; on the
+-- client the player-2 roster slot is a networked view driven by HostSync
+-- snapshots (see docs/online-coop-architecture.md). We still create the roster
+-- slot here so snapshot apply has a local hero/unit to target, so there is no
+-- divergence to gate at this point. Any future client-only change to this spawn
+-- must be gated behind NetSession.IsClient().
 if not CoopHasPlayer(2) then
     CoopCreatePlayer()
 end

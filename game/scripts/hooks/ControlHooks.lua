@@ -11,19 +11,42 @@ local HeroContext = ModRequire "../logic/HeroContext.lua"
 local HeroContextNative = ModRequire "../logic/HeroContextNative.lua"
 ---@type SimpleHook
 local SimpleHook = ModRequire "../utils/SimpleHook.lua"
+---@type NetSession
+local NetSession = ModRequire "../logic/net/NetSession.lua"
+---@type InputSync
+local InputSync = ModRequire "../logic/net/InputSync.lua"
 
 local ControlHooks = SimpleHook.New()
 
 function ControlHooks.wrap.OnControlPressed(baseFun, args)
+    local controlName = args[1]
+    local handler = args[2]
+
+    -- Online path: let InputSync know the gameplay handler for this control so
+    -- the host can replay network InputEvents through the exact same handler.
+    -- This only records a reference; it does not change local dispatch.
+    if NetSession.IsOnline() then
+        InputSync.RegisterHandler(controlName, handler)
+    end
+
     baseFun {
-        args[1],
+        controlName,
         function(triggerArgs)
             local hero = CoopPlayers.GetHeroByUnit(triggerArgs.triggeredById)
+
+            -- Online CLIENT: forward the local press to the host instead of
+            -- resolving a local second hero. When offline this branch is never
+            -- taken, so local splitscreen behavior is unchanged.
+            if NetSession.IsClient() then
+                InputSync.SendLocalControl(controlName, triggerArgs)
+                return
+            end
+
             if hero then
-                HeroContext.RunWithHeroContext(hero, args[2], triggerArgs)
+                HeroContext.RunWithHeroContext(hero, handler, triggerArgs)
             else
-                DebugAssert({ Condition = false, Text = "Controll was pressed without right hero context " .. args[1], Owner = "Uladzislau" })
-                args[2](triggerArgs)
+                DebugAssert({ Condition = false, Text = "Controll was pressed without right hero context " .. controlName, Owner = "Uladzislau" })
+                handler(triggerArgs)
             end
         end
     }
