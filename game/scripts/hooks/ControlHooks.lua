@@ -35,9 +35,14 @@ function ControlHooks.wrap.OnControlPressed(baseFun, args)
             local hero = CoopPlayers.GetHeroByUnit(triggerArgs.triggeredById)
 
             -- Online CLIENT: forward the local press to the host instead of
-            -- resolving a local second hero. When offline this branch is never
-            -- taken, so local splitscreen behavior is unchanged.
-            if NetSession.IsClient() then
+            -- resolving a local second hero, but ONLY for controls that map to a
+            -- hero (the same `hero` resolution the offline path uses below).
+            -- Non-hero controls (menus, UI, system inputs) are not part of the
+            -- shared run, so they must fall through to normal local handling or
+            -- the client could not drive its own menus. When offline this whole
+            -- branch is never taken (IsClient() is false), so local splitscreen
+            -- behavior is unchanged.
+            if hero and NetSession.IsClient() then
                 InputSync.SendLocalControl(controlName, triggerArgs)
                 return
             end

@@ -36,11 +36,23 @@ local GS = "\30" -- ASCII Record Separator fields
 -- Record separator (between units inside a snapshot).
 local RS = "\29" -- ASCII Group Separator
 
+---Format an integer field (ids, player ids, unit ids). Uses "%.0f" so values
+---beyond the 32-bit range still round-trip exactly as decimal digits through
+---tonumber. "%d" would be fine for small ids but can overflow/wrap on some Lua
+---number configs for large engine ObjectIds, so "%.0f" is the safe choice.
 ---@param n number
 ---@return string
-local function num(n)
-    -- %.4g keeps transforms compact while preserving enough precision for
-    -- position/angle; integer ids round-trip exactly through tonumber.
+local function int(n)
+    return string.format("%.0f", n or 0)
+end
+
+---Format a floating-point field (x / y / angle). "%.4g" keeps transforms
+---compact while preserving enough precision for position/angle. Never use this
+---for id fields: it keeps only 4 significant digits and corrupts integers above
+---9999 (e.g. engine ObjectIds).
+---@param n number
+---@return string
+local function flt(n)
     return string.format("%.4g", n or 0)
 end
 
@@ -69,13 +81,13 @@ end
 ---@param clientName string?
 ---@return string
 function NetProtocol.EncodeHello(clientName)
-    return NetProtocol.Kind.Hello .. FS .. num(NetProtocol.VERSION) .. FS .. (clientName or "")
+    return NetProtocol.Kind.Hello .. FS .. int(NetProtocol.VERSION) .. FS .. (clientName or "")
 end
 
 ---@param assignedPlayerId integer
 ---@return string
 function NetProtocol.EncodeWelcome(assignedPlayerId)
-    return NetProtocol.Kind.Welcome .. FS .. num(NetProtocol.VERSION) .. FS .. num(assignedPlayerId or 2)
+    return NetProtocol.Kind.Welcome .. FS .. int(NetProtocol.VERSION) .. FS .. int(assignedPlayerId or 2)
 end
 
 ---@param input { playerId: integer, controlName: string, dx: number?, dy: number?, pressed: boolean? }
@@ -83,10 +95,10 @@ end
 function NetProtocol.EncodeInput(input)
     return table.concat({
         NetProtocol.Kind.InputEvent,
-        num(input.playerId or 2),
+        int(input.playerId or 2),
         input.controlName or "",
-        num(input.dx or 0),
-        num(input.dy or 0),
+        flt(input.dx or 0),
+        flt(input.dy or 0),
         input.pressed and "1" or "0",
     }, FS)
 end
@@ -99,12 +111,12 @@ function NetProtocol.EncodeSnapshot(snapshot)
     for i = 1, #units do
         local u = units[i]
         parts[i] = table.concat({
-            num(u.unitId or 0),
-            num(u.x or 0),
-            num(u.y or 0),
-            num(u.angle or 0),
+            int(u.unitId or 0),
+            flt(u.x or 0),
+            flt(u.y or 0),
+            flt(u.angle or 0),
             tostring(u.animId or ""),
-            num(u.health or 0),
+            flt(u.health or 0),
         }, GS)
     end
     return NetProtocol.Kind.StateSnapshot .. FS .. table.concat(parts, RS)
@@ -113,7 +125,7 @@ end
 ---@param timestamp number?
 ---@return string
 function NetProtocol.EncodeHeartbeat(timestamp)
-    return NetProtocol.Kind.Heartbeat .. FS .. num(timestamp or 0)
+    return NetProtocol.Kind.Heartbeat .. FS .. flt(timestamp or 0)
 end
 
 --- Decoder ------------------------------------------------------------------

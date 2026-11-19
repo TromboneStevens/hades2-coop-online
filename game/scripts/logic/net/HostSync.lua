@@ -143,8 +143,19 @@ function HostSync.OnSnapshot(msg)
         if localUnitId then
             ApplyUnitPosition(localUnitId, u.x, u.y)
             ApplyUnitAnimation(localUnitId, u.animId)
-            -- Health is a proven hero field used throughout the mod.
-            hero.Health = u.health
+            -- Health is a proven hero field used throughout the mod. Clamp the
+            -- wire value before applying so a malformed/zero/overflowing
+            -- snapshot cannot drive the local display out of range: floor at 0
+            -- and cap at hero.MaxHealth when the mod exposes it.
+            local health = tonumber(u.health) or 0
+            if health < 0 then
+                health = 0
+            end
+            local maxHealth = tonumber(hero.MaxHealth)
+            if maxHealth and health > maxHealth then
+                health = maxHealth
+            end
+            hero.Health = health
         end
     end
 end
