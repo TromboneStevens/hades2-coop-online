@@ -228,6 +228,102 @@ static int CoopRemoveAnimationSwap(lua_State *L) {
     return 0;
 }
 
+// bool CoopNetStartHost(number port)
+static int CoopNetStartHost(lua_State *L) {
+    if (!lua_isnumber(L, 1)) {
+        return luaL_error(L, "Argument 1 must be a number");
+    }
+
+    uint16_t port = static_cast<uint16_t>(lua_tonumber(L, 1));
+
+    bool result = CoopContext::GetInstance()->GetNetTransport().StartHost(port);
+    lua_pushboolean(L, result);
+    return 1;
+}
+
+// bool CoopNetStartClient(string address, number port)
+static int CoopNetStartClient(lua_State *L) {
+    if (!lua_isstring(L, 1)) {
+        return luaL_error(L, "Argument 1 must be a string");
+    }
+
+    if (!lua_isnumber(L, 2)) {
+        return luaL_error(L, "Argument 2 must be a number");
+    }
+
+    const char *address = lua_tostring(L, 1);
+    uint16_t port = static_cast<uint16_t>(lua_tonumber(L, 2));
+
+    bool result = CoopContext::GetInstance()->GetNetTransport().StartClient(address, port);
+    lua_pushboolean(L, result);
+    return 1;
+}
+
+// bool CoopNetSend(string message)
+static int CoopNetSend(lua_State *L) {
+    if (!lua_isstring(L, 1)) {
+        return luaL_error(L, "Argument 1 must be a string");
+    }
+
+    size_t length = 0;
+    const char *message = lua_tolstring(L, 1, &length);
+
+    bool result = CoopContext::GetInstance()->GetNetTransport().Send(std::string(message, length));
+    lua_pushboolean(L, result);
+    return 1;
+}
+
+// void CoopNetPoll()
+static int CoopNetPoll(lua_State *L) {
+    CoopContext::GetInstance()->GetNetTransport().Poll();
+    return 0;
+}
+
+// string/nil CoopNetReceive()
+static int CoopNetReceive(lua_State *L) {
+    std::string message;
+    if (CoopContext::GetInstance()->GetNetTransport().PollMessage(message)) {
+        lua_pushlstring(L, message.data(), message.size());
+    } else {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+// bool CoopNetIsConnected()
+static int CoopNetIsConnected(lua_State *L) {
+    bool result = CoopContext::GetInstance()->GetNetTransport().IsConnected();
+    lua_pushboolean(L, result);
+    return 1;
+}
+
+// string CoopNetGetRole()
+static int CoopNetGetRole(lua_State *L) {
+    NetTransport::Role role = CoopContext::GetInstance()->GetNetTransport().GetRole();
+
+    const char *roleName;
+    switch (role) {
+    case NetTransport::Host:
+        roleName = "Host";
+        break;
+    case NetTransport::Client:
+        roleName = "Client";
+        break;
+    default:
+        roleName = "None";
+        break;
+    }
+
+    lua_pushstring(L, roleName);
+    return 1;
+}
+
+// void CoopNetClose()
+static int CoopNetClose(lua_State *L) {
+    CoopContext::GetInstance()->GetNetTransport().Close();
+    return 0;
+}
+
 void LuaFunctionDefs::Load(lua_State* L) {
     #define REGISTER(fun) lua_register(L, #fun, fun)
 
@@ -249,6 +345,15 @@ void LuaFunctionDefs::Load(lua_State* L) {
 
     REGISTER(CoopSetAnimationSwap);
     REGISTER(CoopRemoveAnimationSwap);
+
+    REGISTER(CoopNetStartHost);
+    REGISTER(CoopNetStartClient);
+    REGISTER(CoopNetSend);
+    REGISTER(CoopNetPoll);
+    REGISTER(CoopNetReceive);
+    REGISTER(CoopNetIsConnected);
+    REGISTER(CoopNetGetRole);
+    REGISTER(CoopNetClose);
 
     #undef REGISTER
 }

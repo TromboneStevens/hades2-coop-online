@@ -169,8 +169,8 @@ Keep this section current as the online path lands.
 | Local splitscreen coop | **Implemented** (ships today, unchanged by the online work). |
 | `CoopMode` / `Online` config switch | **Implemented** (FEAT-001). Fields exist and default to `Local`; nothing reads them to change behavior yet. |
 | This architecture doc | **Implemented** (FEAT-001). |
-| Native TCP transport (Winsock) | **Stubbed / planned** (FEAT-002). |
-| Length-prefixed framing + message kinds | **Planned** (FEAT-002 framing, FEAT-003 semantics). |
+| Native TCP transport (Winsock) | **Implemented** (FEAT-002). `NetTransport` in `game/src/net/` plus `Coop*` Lua bindings. The Winsock code path compiles only on the Windows/MSVC target (guarded by `#ifdef _WIN32`, linked against `ws2_32`); other platforms get a no-op fallback branch. |
+| Length-prefixed framing + message kinds | **Framing implemented** (FEAT-002): 4-byte little-endian length prefix in `NetTransport`. Message kinds / semantics **planned** (FEAT-003). |
 | Session handshake, send/receive pump | **Planned** (FEAT-003). |
 | Host-side input injection from network | **Planned** (FEAT-003). |
 | Remote hero/unit mapping + snapshot apply | **Planned** (FEAT-003). |
