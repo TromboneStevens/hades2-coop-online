@@ -5,6 +5,7 @@
 
 #include "extensions/PlayerManagerExtension.h"
 #include "PlayerAnimationSwap.h"
+#include "net/NetTransport.h"
 #include <memory>
 #include <vector>
 
@@ -40,8 +41,11 @@ class CoopContext {
 
     PlayerAnimationSwap &GetAnimationSwap(size_t playerIndex) { return animationSwaps[playerIndex]; }
 
+    NetTransport &GetNetTransport() noexcept { return netTransport; }
+
   private:
     PlayerManagerExtension playerManager;
     PlayerAnimationSwap animationSwaps[MAX_PLAYERS]{};
+    NetTransport netTransport;
     static std::unique_ptr<CoopContext> instance;
 };

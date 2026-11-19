@@ -3,6 +3,16 @@
 -- Licensed under the MIT license. See LICENSE file in the project root for details.
 --
 
+-- Online coop (CoopMode == "Online"): host/join selection is config-driven for
+-- now and intentionally NOT wired into these menu widgets. Adding host/join and
+-- address-entry widgets to this controller-selection screen risks breaking the
+-- existing local-splitscreen flow (menu state machine, reflections, screen
+-- definitions), so the online role is chosen by editing config.lua
+-- (Online.Role / Online.HostAddress / Online.Port) and the session is started
+-- from GamemodeInit via NetSession.StartFromConfig(). See the host/join menu
+-- row in docs/online-coop-architecture.md section 6. This menu is unchanged for
+-- the local path.
+
 ---@type PlayerDeviceData[]
 local SelectedGuiControl = {}
 

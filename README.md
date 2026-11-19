@@ -5,6 +5,15 @@ This mod adds local cooperative multiplayer to Hades 2, allowing two players to 
 
 For online play: Use a streaming tool like [Parsec](https://parsec.app/) to share your game session with a remote friend.
 
+## Online coop (experimental)
+
+Native online 2-PC coop is in development. It uses a host-authoritative model:
+one PC hosts the authoritative run with both heroes in-process, and the other PC
+joins as a thin client. This path is gated behind the `CoopMode` config switch
+and defaults to the existing local-splitscreen behavior. See
+[docs/online-coop-architecture.md](docs/online-coop-architecture.md) for the
+design.
+
 The mod supports the **Steam** and **Epic Games Store** versions of the gamme
 
 **Warning**
