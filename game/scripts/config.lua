@@ -5,6 +5,22 @@
 
 ---@class CoopModConfig
 local Config = {
+    -- Coop networking mode.
+    -- Possible values: "Local", "Online"
+    --
+    -- Local  - local splitscreen coop on one PC (the default, shipping behavior).
+    -- Online - online 2-PC coop (in development, see docs/online-coop-architecture.md).
+    -- These fields are read by later online-coop features. While CoopMode is
+    -- "Local" nothing reads them to change behavior.
+    CoopMode = "Local",
+    Online = {
+        -- "Host" runs the authoritative simulation; "Client" is a thin peer.
+        Role = "Host",
+        -- Host address the client connects to (ignored when Role is "Host").
+        HostAddress = "127.0.0.1",
+        -- TCP port used by host and client.
+        Port = 7777,
+    },
     -- Choose loot delivery type here
     -- Possible values: "Shared"
     --
